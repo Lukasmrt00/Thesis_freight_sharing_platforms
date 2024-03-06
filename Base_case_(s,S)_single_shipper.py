@@ -22,9 +22,32 @@ def order_calculation(inv, s, S, numb_trucks, truck_cap):
         numb_trucks += mt.ceil(order / truck_cap)
     else:
         order = 0
+    return order, numb_trucks
 
 
-def simulation(s_range, S_max, horizon, truck_cap, mu_d, stdev_d, h, K, b, best_s, best_S, best_cost, ass_numb_trucks, ass_avg_cap_util, ass_serv_lev):
+def cost_calculation(inv, cost, order, h, b, K, numb_per_OoS):
+    if inv > 0:
+        cost += (h * inv)
+    else:
+        cost -= (b * inv)
+        numb_per_OoS += 1
+
+    if order > 0:
+        cost += K
+    return cost, numb_per_OoS
+
+
+def simulation(mu_d, stdev_d, h, K, b, truck_cap):
+    ass_numb_trucks = 0     # associated number of trucks
+    ass_avg_cap_util = 0    # associated average capacity utilization
+    ass_serv_lev = 0        # associated service level
+    horizon = 1_000
+    s_range = [i for i in range(-20, 50)]
+    S_max = 50
+    best_s = 0
+    best_S = 0
+    best_cost = 999999999
+
     for s in s_range:
         for S in range(s, S_max + 1):
             cost = 0
@@ -35,12 +58,7 @@ def simulation(s_range, S_max, horizon, truck_cap, mu_d, stdev_d, h, K, b, best_
 
             for t in range(horizon):
                 # calculate order and the number of corresponding trucks
-                if inv <= s:
-                    order = S - inv
-                    # print(s,",",S,": Order ",order, " units")
-                    numb_trucks += mt.ceil(order/truck_cap)
-                else:
-                    order = 0
+                order, numb_trucks = order_calculation(inv, s, S, numb_trucks, truck_cap)
 
                 # Add capacity utilization rate(s) to list
                 if order > 0:
@@ -51,14 +69,8 @@ def simulation(s_range, S_max, horizon, truck_cap, mu_d, stdev_d, h, K, b, best_
                 inv -= max(0, np.random.normal(mu_d, stdev_d))
 
                 # calculate costs
-                if inv > 0:
-                    cost += (h * inv)
-                else:
-                    cost -= (b * inv)
-                    numb_per_OoS += 1
+                cost, numb_per_OoS = cost_calculation(inv, cost, order, h, b, K, numb_per_OoS)
 
-                if order > 0:
-                    cost += K
                 if cost > best_cost:
                     break
 
@@ -78,7 +90,6 @@ def simulation(s_range, S_max, horizon, truck_cap, mu_d, stdev_d, h, K, b, best_
     print("Associated service level", ass_serv_lev)
 
 
-
 # Section 2: Execution
 def main():
     h = 1           # holding cost per unit in inventory, per unit of time
@@ -86,18 +97,10 @@ def main():
     K = 50          # fixed order cost per truck
     mu_d = 10       # mean demand (normal distribution)
     stdev_d = 2     # standard deviation demand (normal distribution)
-
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
-    horizon = 1_000
-    s_range = [i for i in range(-20, 50)]
-    S_max = 50
-    best_s = 0
-    best_S = 0
-    best_cost = 999999999
-    ass_numb_trucks = 0     # associated number of trucks
-    ass_avg_cap_util = 0    # associated average capacity utilization
-    ass_serv_lev = 0        # associated service level
 
-    simulation(s_range, S_max, horizon, truck_cap, mu_d, stdev_d, h, K,b, best_s,best_S,best_cost,ass_numb_trucks,ass_avg_cap_util,ass_serv_lev)
+    simulation(mu_d, stdev_d, h, K, b, truck_cap)
+
 
 main()
+
