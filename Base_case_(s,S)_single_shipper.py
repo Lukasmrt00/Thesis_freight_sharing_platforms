@@ -3,10 +3,10 @@ import math as mt
 
 
 # Section 1: function definition
-def capacity_utilization(order_size,truck_cap):
+def capacity_utilization(order,truck_cap):
     capac_util = []
-    numb_ftl = int(order_size // truck_cap)
-    cap_util_ltl = (order_size / truck_cap) - numb_ftl
+    numb_ftl = int(order // truck_cap)
+    cap_util_ltl = (order / truck_cap) - numb_ftl
     if numb_ftl != 0:
         capac_util += [1] * numb_ftl
         capac_util.append(cap_util_ltl)
@@ -25,7 +25,7 @@ def order_calculation(inv, s, S, numb_trucks, truck_cap):
     return order, numb_trucks
 
 
-def cost_calculation(inv, cost, order, h, b, K, numb_per_OoS):
+def cost_calculation(inv, cost, order, h, b, K, numb_per_OoS, truck_cap):
     if inv > 0:
         cost += (h * inv)
     else:
@@ -33,7 +33,7 @@ def cost_calculation(inv, cost, order, h, b, K, numb_per_OoS):
         numb_per_OoS += 1
 
     if order > 0:
-        cost += K
+        cost += K * mt.ceil(order / truck_cap)
     return cost, numb_per_OoS
 
 
@@ -68,8 +68,9 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap):
                 inv += order
                 inv -= max(0, np.random.normal(mu_d, stdev_d))
 
+
                 # calculate costs
-                cost, numb_per_OoS = cost_calculation(inv, cost, order, h, b, K, numb_per_OoS)
+                cost, numb_per_OoS = cost_calculation(inv, cost, order, h, b, K, numb_per_OoS, truck_cap)
 
                 if cost > best_cost:
                     break
