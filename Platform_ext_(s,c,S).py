@@ -95,7 +95,7 @@ def cost_calc_collab_s1(inv, cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap
 
 # Section 3: simulation execution
 def simulation(mu_d, stdev_d, h, k, K, b, truck_cap):
-    horizon = 10
+    horizon = 1_000
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = [0, 0]
