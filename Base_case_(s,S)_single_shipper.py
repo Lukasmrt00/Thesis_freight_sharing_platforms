@@ -69,7 +69,6 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
                 inv += order
                 inv -= max(0, np.random.normal(mu_d, stdev_d))
 
-
                 # calculate costs
                 cost, numb_per_OoS = cost_calculation(inv, cost, order, h, b, K, numb_per_OoS, truck_cap)
 
@@ -83,6 +82,7 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
                 ass_numb_trucks = numb_trucks
                 ass_avg_cap_util = np.mean(cap_util)
                 ass_serv_lev = 1-(numb_per_OoS/horizon)
+
     print("----- Output -----")
     print("Best value for s:", best_s)
     print("Best value for S:", best_S)
@@ -92,7 +92,6 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
     print("Associated service level", ass_serv_lev)
 
     return [h, b, K, mu_d, stdev_d, best_s, best_S, best_cost, ass_numb_trucks, ass_avg_cap_util, ass_serv_lev, rep]
-
 
 
 # Section 2: Execution
