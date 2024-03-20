@@ -42,7 +42,7 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
     ass_numb_trucks = 0     # associated number of trucks
     ass_avg_cap_util = 0    # associated average capacity utilization
     ass_serv_lev = 0        # associated service level
-    horizon = 1_000
+    horizon = 10
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = 0
@@ -78,9 +78,9 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
             if cost < best_cost:
                 best_s = s
                 best_S = S
-                best_cost = cost
+                best_cost = round(cost, 5)
                 ass_numb_trucks = numb_trucks
-                ass_avg_cap_util = np.mean(cap_util)
+                ass_avg_cap_util = round(float(np.mean(cap_util)), 5)
                 ass_serv_lev = 1-(numb_per_OoS/horizon)
 
     print("----- Output -----")
@@ -97,7 +97,7 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
 # Section 2: Execution
 def main():
     h = 1                               # holding cost per unit in inventory, per unit of time
-    b_values = [5, 10, 19]              # backlog cost per unit backlog (negative inventory), per unit of time
+    b_values = [5, 19, 30]              # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [25, 50, 100]            # fixed order cost per truck
     mu_d_values = [3, 10, 30]       # mean demand (normal distribution)
     stdev_d_values = [2, 5, 15]     # standard deviation demand (normal distribution)
@@ -106,7 +106,7 @@ def main():
     output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
                "Avg. capacity utilization", "Service level", "Repetition"]]
 
-    for rep in range(1, 6):
+    for rep in range(1, 2):
         for b in b_values:
             for K in K_values:
                 for mu_d in mu_d_values:

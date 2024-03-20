@@ -172,16 +172,11 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
         print("Associated average utilization rate:", ass_avg_cap_util[i])
         print("Associated service level", ass_serv_lev[i])
 
-    total_ass_numb_trucks = ass_numb_trucks[0]+ass_numb_trucks[1]
-    total_avg_cap_util = 0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1])
-
     print("----- Total -----")
-    print("Total number of trucks needed:", total_ass_numb_trucks)
-    print("Total average utilization rate", total_avg_cap_util)
+    print("Total number of trucks needed:", ass_numb_trucks[0]+ass_numb_trucks[1])
+    print("Total average utilization rate", 0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1]))
 
-    return [h, b, K, k, mu_d, stdev_d, best_s[0], best_s[1], best_S[0], best_S[1], best_cost[0], best_cost[1],
-            ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0],
-            ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
+    return [h, b, K, k, mu_d, stdev_d, best_s, best_S, best_cost, ass_numb_trucks, ass_avg_cap_util, ass_serv_lev, rep]
 
 
 def main():
@@ -193,10 +188,8 @@ def main():
     stdev_d_values = [2, 2]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
 
-    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "s-value S2", "S-value S1", "S-value S2",
-               "Corresponding cost S1", "Corresponding cost S2", "# trucks needed S1", "# trucks needed S2",
-               "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1", "Service level S2",
-               "Total ass # trucks", "Total avg cap util", "Repetition"]]
+    output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
+               "Avg. capacity utilization", "Service level", "Repetition"]]
 
     for rep in range(1, 2):
         for b in b_values:
