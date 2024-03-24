@@ -1,5 +1,7 @@
 import numpy as np
 import math as mt
+import csv
+import copy
 
 
 # Section 2: function definition
@@ -31,6 +33,7 @@ def capacity_utilization_collab(order, truck_cap):
 
 
 def calculate_avg_capacity(cap_list):
+    print(cap_list)
     sum_cap_util = 0
     for i in range(0, len(cap_list)):
         sum_cap_util += cap_list[i]
@@ -67,35 +70,36 @@ def order_calculation(inv, s, S, numb_trucks, truck_cap):
     return order, numb_trucks
 
 
-def cost_calculation(inv, cost, order, h, b, K, numb_per_OoS, truck_cap):
+def cost_calculation(inv, temp_cost, order, h_loc, b_loc, K, numb_per_OoS, truck_cap):
     if inv > 0:
-        cost += (h * inv)
+        temp_cost += (h_loc * inv)
     else:
-        cost -= (b * inv)
+        temp_cost -= (b_loc * inv)
         numb_per_OoS += 1
 
     if order > 0:
-        cost += K * mt.ceil(order/truck_cap)
-    return cost, numb_per_OoS
+        temp_cost += K * mt.ceil(order/truck_cap)
+    return temp_cost, numb_per_OoS
 
 
-def cost_calc_collab_s1(inv, cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap):
+def cost_calc_collab_s1(inv, temp_cost, order, h_loc, b_loc, k, K, numb_per_OoS_s1, truck_cap):
     if inv > 0:
-        cost[0] += (h * inv)
+        temp_cost[0] += (h_loc * inv)
     else:
-        cost[0] -= (b * inv)
+        temp_cost[0] -= (b_loc * inv)
+        print(temp_cost)
         numb_per_OoS_s1 += 1
 
     if order > 0:
-        cost[0] += K * mt.ceil(order/truck_cap)
-        cost[0] -= k * 0.5
-        cost[1] += k
-    return cost, numb_per_OoS_s1
+        temp_cost[0] += K * mt.ceil(order/truck_cap)
+        temp_cost[0] -= k * 0.5
+        temp_cost[1] += k
+    return temp_cost, numb_per_OoS_s1
 
 
 # Section 3: simulation execution
 def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
-    horizon = 1_000
+    horizon = 100
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = [0, 0]
@@ -115,7 +119,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             cap_util = [[], []]
             inv = [mu_d[0], mu_d[1]]
 
-            for c in range(s,S):
+            for c in range(s, S):
                 for t in range(horizon):
                     for i in range(2):
                         if i == 0:
@@ -126,7 +130,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                 if s < inv[1] <= c:
                                     order[1] = min(S-inv[1], excess_cap)
                                     # cost calculation in the collaborative situation
-                                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
+                                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], copy.deepcopy(cost), order[0], h[i], b[i],
                                                                                 k, K[i], numb_per_OoS[0], truck_cap)
                                     # adjust inventory levels and report capacity utilization rates
                                     for k in range(2):
@@ -137,7 +141,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                     cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
                                                                                 K[i], numb_per_OoS[i], truck_cap)
                                     inv[0] += order[0]
-                                    cap_util[i].extend(capacity_utilization(order[i],truck_cap))
+                                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
                         else:
                             order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
                             inv[i] += order[i]
@@ -147,6 +151,8 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                         inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
 
                     # stop simulation of this (s,S) configuration if no improvement w.r.t. current best
+                    print(cost)
+                    print(best_cost)
                     if cost[0] > best_cost[0] and cost[1] > best_cost[1]:
                         break
 
@@ -187,10 +193,10 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
-    K_values = [50, 50]  # fixed order cost per truck
-    k = 0.8 * K_values[1]
-    mu_d_values = [10, 10]  # mean demand (normal distribution)
-    stdev_d_values = [2, 2]  # standard deviation demand (normal distribution)
+    K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
+    k_percent = [0.50, 0.75, 0.90]
+    mu_d_values = [[3,3], [10, 10], [30, 30]]  # mean demand (normal distribution)
+    stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
 
     output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "s-value S2", "S-value S1", "S-value S2",
@@ -198,16 +204,17 @@ def main():
                "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1", "Service level S2",
                "Total ass # trucks", "Total avg cap util", "Repetition"]]
 
-    for rep in range(1, 2):
-        for b in b_values:
-            for K in K_values:
+    for rep in range(1, 11):
+        for K in K_values:
+            for p in k_percent:
+                k = p * K[0]
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                        if mu_d - stdev_d >= 0:
-                            output.append(simulation(mu_d, stdev_d, h, k, K, b, truck_cap))
+                        # if mu_d[0] - stdev_d[0] >= 0 and mu_d[1] - stdev_d[1] >= 0:
+                            output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_5_reps.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_10_reps.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
@@ -215,6 +222,7 @@ def main():
         writer.writerows(output)
 
     print("Data has been written to", file_path)
+
 
 main()
 
