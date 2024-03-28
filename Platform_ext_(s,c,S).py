@@ -70,11 +70,11 @@ def order_calculation(inv, s, S, numb_trucks, truck_cap):
     return order, numb_trucks
 
 
-def cost_calculation(inv, temp_cost, order, h_loc, b_loc, K, numb_per_OoS, truck_cap):
+def cost_calculation(inv, temp_cost, order, h, b, K, numb_per_OoS, truck_cap):
     if inv > 0:
-        temp_cost += (h_loc * inv)
+        temp_cost += (h * inv)
     else:
-        temp_cost -= (b_loc * inv)
+        temp_cost -= (b * inv)
         numb_per_OoS += 1
 
     if order > 0:
@@ -82,11 +82,11 @@ def cost_calculation(inv, temp_cost, order, h_loc, b_loc, K, numb_per_OoS, truck
     return temp_cost, numb_per_OoS
 
 
-def cost_calc_collab_s1(inv, temp_cost, order, h_loc, b_loc, k, K, numb_per_OoS_s1, truck_cap):
+def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap):
     if inv > 0:
-        temp_cost[0] += (h_loc * inv)
+        temp_cost[0] += (h * inv)
     else:
-        temp_cost[0] -= (b_loc * inv)
+        temp_cost[0] -= (b * inv)
         print(temp_cost)
         numb_per_OoS_s1 += 1
 
@@ -195,7 +195,7 @@ def main():
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
     k_percent = [0.50, 0.75, 0.90]
-    mu_d_values = [[3,3], [10, 10], [30, 30]]  # mean demand (normal distribution)
+    mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
     stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
 
@@ -210,7 +210,7 @@ def main():
                 k = p * K[0]
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                        # if mu_d[0] - stdev_d[0] >= 0 and mu_d[1] - stdev_d[1] >= 0:
+                         if mu_d[0] - stdev_d[0] >= 0 and mu_d[1] - stdev_d[1] >= 0:
                             output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data

@@ -116,11 +116,11 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             cap_util = [[], []]
             inv = [mu_d[0], mu_d[1]]
 
-            for c in range(s,S):
+            for m in range(0, S):
                 for t in range(horizon):
                     for i in range(2):
                         if i == 0:
-                            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s, S,
+                            order, numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s, S,
                                                                                        numb_trucks[i], truck_cap)
                             if order[i] > 0:
                                 # Shipper 2 accepts the transport opportunity: collaborative shipping
