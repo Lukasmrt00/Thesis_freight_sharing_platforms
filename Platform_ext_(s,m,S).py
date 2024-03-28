@@ -89,19 +89,19 @@ def cost_calc_collab_s1(inv, cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap
 
     if order > 0:
         cost[0] += K * mt.ceil(order/truck_cap)
-        cost[0] -= k * 0.5
+        # cost[0] -= k * 0.5
         cost[1] += k
     return cost, numb_per_OoS_s1
 
 
 # Section 3: simulation execution
 def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
-    horizon = 1_000
+    horizon = 10
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = [0, 0]
     best_S = [0, 0]
-    best_c = 0
+    best_m = 0
     best_cost = [999999999, 999999999]
     ass_numb_trucks = [0, 0]  # associated number of trucks
     ass_avg_cap_util = [0, 0]  # associated average capacity utilization
@@ -120,19 +120,19 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                 for t in range(horizon):
                     for i in range(2):
                         if i == 0:
-                            order, numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s, S,
+                            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s, S,
                                                                                        numb_trucks[i], truck_cap)
                             if order[i] > 0:
                                 # Shipper 2 accepts the transport opportunity: collaborative shipping
-                                if s < inv[1] <= c:
+                                if excess_cap >= m and S-inv[1] >= m:
                                     order[1] = min(S-inv[1], excess_cap)
                                     # cost calculation in the collaborative situation
                                     cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
                                                                                 k, K[i], numb_per_OoS[0], truck_cap)
                                     # adjust inventory levels and report capacity utilization rates
-                                    for k in range(2):
+                                    for q in range(2):
                                         inv[i] += order[i]
-                                        cap_util[k].extend(capacity_utilization_collab(order, truck_cap)[k])
+                                        cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
                                 # Shipper 2 does not accept the excess capacity
                                 else:
                                     cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
@@ -155,7 +155,8 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                     if cost[i] < best_cost[i]:
                         best_s[i] = s
                         best_S[i] = S
-                        best_c = c
+                        if i == 1:
+                            best_m = m
                         best_cost[i] = cost[i]
                         ass_numb_trucks[i] = numb_trucks[i]
                         ass_avg_cap_util[i] = calculate_avg_capacity(cap_util[i])
@@ -166,42 +167,50 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
         print("Best value for s:", best_s[i])
         print("Best value for S:", best_S[i])
         if i == 1:
-            print("Best value for c:", best_c)
+            print("Best value for m:", best_m)
 
         print("Corresponding cost", best_cost[i])
         print("Associated number of trucks needed:", ass_numb_trucks[i])
         print("Associated average utilization rate:", ass_avg_cap_util[i])
         print("Associated service level", ass_serv_lev[i])
 
-    print("----- Total -----")
-    print("Total number of trucks needed:", ass_numb_trucks[0]+ass_numb_trucks[1])
-    print("Total average utilization rate", 0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1]))
+    total_ass_numb_trucks = ass_numb_trucks[0] + ass_numb_trucks[1]
+    total_avg_cap_util = 0.5 * (ass_avg_cap_util[0] + ass_avg_cap_util[1])
 
-    return [h, b, K, k, mu_d, stdev_d, best_s, best_S, best_cost, ass_numb_trucks, ass_avg_cap_util, ass_serv_lev, rep]
+    print("----- Total -----")
+    print("Total number of trucks needed:", total_ass_numb_trucks)
+    print("Total average utilization rate", total_avg_cap_util)
+
+    return [h, b, K, k, mu_d, stdev_d, best_s[0], best_s[1], best_S[0], best_S[1], best_m, best_cost[0], best_cost[1],
+            ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0],
+            ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
 
 
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
-    K_values = [50, 50]  # fixed order cost per truck
-    k = 0.8 * K_values[1]
-    mu_d_values = [10, 10]  # mean demand (normal distribution)
-    stdev_d_values = [2, 2]  # standard deviation demand (normal distribution)
+    K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
+    k_percent = [0.50, 0.75, 0.90]
+    mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
+    stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
 
-    output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
-               "Avg. capacity utilization", "Service level", "Repetition"]]
+    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "s-value S2", "S-value S1", "S-value S2",
+               "Corresponding c value", "Corresponding cost S1", "Corresponding cost S2", "# trucks needed S1",
+               "# trucks needed S2", "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1",
+               "Service level S2", "Total ass # trucks", "Total avg cap util", "Repetition"]]
 
-    for rep in range(1, 2):
-        for b in b_values:
-            for K in K_values:
+    for rep in range(1, 11):
+        for K in K_values:
+            for p in k_percent:
+                k = p * K[0]
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                        if mu_d - stdev_d >= 0:
-                            output.append(simulation(mu_d, stdev_d, h, k, K, b, truck_cap))
+                         if mu_d[0] - stdev_d[0] >= 0 and mu_d[1] - stdev_d[1] >= 0:
+                            output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_5_reps.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,m,S)_10_reps.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
@@ -209,7 +218,6 @@ def main():
         writer.writerows(output)
 
     print("Data has been written to", file_path)
-
 main()
 
 
