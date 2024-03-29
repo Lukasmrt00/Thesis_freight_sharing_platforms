@@ -96,7 +96,7 @@ def cost_calc_collab_s1(inv, cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap
 
 # Section 3: simulation execution
 def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
-    horizon = 10
+    horizon = 1_000
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = [0, 0]
@@ -124,7 +124,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                                                                        numb_trucks[i], truck_cap)
                             if order[i] > 0:
                                 # Shipper 2 accepts the transport opportunity: collaborative shipping
-                                if excess_cap >= m and S-inv[1] >= m:
+                                if (excess_cap >= m) and (S-inv[1] >= m):
                                     order[1] = min(S-inv[1], excess_cap)
                                     # cost calculation in the collaborative situation
                                     cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
@@ -138,7 +138,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                     cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
                                                                                 K[i], numb_per_OoS[i], truck_cap)
                                     inv[0] += order[0]
-                                    cap_util[i].extend(capacity_utilization(order[i],truck_cap))
+                                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
                         else:
                             order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
                             cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
@@ -161,6 +161,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                             best_m = m
                         best_cost[i] = cost[i]
                         ass_numb_trucks[i] = numb_trucks[i]
+                        print(cap_util)
                         ass_avg_cap_util[i] = calculate_avg_capacity(cap_util[i])
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
 
