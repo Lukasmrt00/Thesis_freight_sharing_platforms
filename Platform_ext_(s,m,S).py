@@ -96,7 +96,7 @@ def cost_calc_collab_s1(inv, cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap
 
 # Section 3: simulation execution
 def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
-    horizon = 10
+    horizon = 1_000
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = [0, 0]
@@ -124,7 +124,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                                                                        numb_trucks[i], truck_cap)
                             if order[i] > 0:
                                 # Shipper 2 accepts the transport opportunity: collaborative shipping
-                                if excess_cap >= m and S-inv[1] >= m:
+                                if (excess_cap >= m) and (S-inv[1] >= m):
                                     order[1] = min(S-inv[1], excess_cap)
                                     # cost calculation in the collaborative situation
                                     cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
@@ -138,9 +138,11 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                     cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
                                                                                 K[i], numb_per_OoS[i], truck_cap)
                                     inv[0] += order[0]
-                                    cap_util[i].extend(capacity_utilization(order[i],truck_cap))
+                                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
                         else:
                             order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
+                            cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
+                                                                        K[i], numb_per_OoS[i], truck_cap)
                             inv[i] += order[i]
                             if order[i] > 0:
                                 cap_util[i].extend(capacity_utilization(order[i], truck_cap))
@@ -159,6 +161,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                             best_m = m
                         best_cost[i] = cost[i]
                         ass_numb_trucks[i] = numb_trucks[i]
+                        print(cap_util)
                         ass_avg_cap_util[i] = calculate_avg_capacity(cap_util[i])
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
 
@@ -181,7 +184,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     print("Total number of trucks needed:", total_ass_numb_trucks)
     print("Total average utilization rate", total_avg_cap_util)
 
-    return [h, b, K, k, mu_d, stdev_d, best_s[0], best_s[1], best_S[0], best_S[1], best_m, best_cost[0], best_cost[1],
+    return [h, b, K, k, mu_d, stdev_d, best_s[0], best_S[0], best_s[1], best_S[1], best_m, best_cost[0], best_cost[1],
             ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0],
             ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
 
@@ -195,7 +198,7 @@ def main():
     stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
 
-    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "s-value S2", "S-value S1", "S-value S2",
+    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1",  "S-value S1", "s-value S2", "S-value S2",
                "Corresponding c value", "Corresponding cost S1", "Corresponding cost S2", "# trucks needed S1",
                "# trucks needed S2", "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1",
                "Service level S2", "Total ass # trucks", "Total avg cap util", "Repetition"]]
@@ -206,8 +209,7 @@ def main():
                 k = p * K[0]
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                         if mu_d[0] - stdev_d[0] >= 0 and mu_d[1] - stdev_d[1] >= 0:
-                            output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
+                        output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
     file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,m,S)_10_reps.csv'
