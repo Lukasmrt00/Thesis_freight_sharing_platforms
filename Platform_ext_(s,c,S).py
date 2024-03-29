@@ -21,7 +21,7 @@ def capacity_utilization_collab(order, truck_cap):
     cap_util = [[], []]
     numb_ftl_s1 = int(order[0] // truck_cap)
     cap_util_ltl_s1 = (order[0] / truck_cap) - numb_ftl_s1
-    cap_util_collab = cap_util_ltl_s1 + order[1]
+    cap_util_collab = cap_util_ltl_s1 + (order[1] / truck_cap)
     if numb_ftl_s1 != 0:
         cap_util[0] += [1] * numb_ftl_s1
         for i in range(2):
@@ -115,7 +115,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             cap_util = [[], []]
             inv = [mu_d[0], mu_d[1]]
 
-            for c in range(s, S):
+            for c in range(s+1, S):
                 for t in range(horizon):
                     for i in range(2):
                         if i == 0:
@@ -159,9 +159,9 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                         # only change c for shipper 2 (cannot be changed for a better cost for S1)
                         if i == 1:
                             best_c = c
-                        best_cost[i] = cost[i]
+                        best_cost[i] = round(cost[i], 5)
                         ass_numb_trucks[i] = numb_trucks[i]
-                        ass_avg_cap_util[i] = calculate_avg_capacity(cap_util[i])
+                        ass_avg_cap_util[i] = round(calculate_avg_capacity(cap_util[i]), 5)
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
 
     for i in range(2):
@@ -177,7 +177,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
         print("Associated service level", ass_serv_lev[i])
 
     total_ass_numb_trucks = ass_numb_trucks[0]+ass_numb_trucks[1]
-    total_avg_cap_util = 0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1])
+    total_avg_cap_util = round(0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1]), 5)
 
     print("----- Total -----")
     print("Total number of trucks needed:", total_ass_numb_trucks)
@@ -203,18 +203,18 @@ def main():
                "Service level S2", "Total ass # trucks", "Total avg cap util", "Repetition"]]
 
     for rep in range(1, 2):
-        print("------- New repetition -------")
+        print("\n------- New repetition -------")
         for K in K_values:
             for p in k_percent:
                 k = p * K[0]
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                        print("------- New input values -------")
+                        print("\n------- New input values -------")
                         print("Repetition number: ", rep)
                         output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_adj.csv'
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
         writer = csv.writer(file, delimiter=';')
