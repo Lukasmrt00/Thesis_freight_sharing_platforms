@@ -21,7 +21,7 @@ def capacity_utilization_collab(order, truck_cap):
     cap_util = [[], []]
     numb_ftl_s1 = int(order[0] // truck_cap)
     cap_util_ltl_s1 = (order[0] / truck_cap) - numb_ftl_s1
-    cap_util_collab = cap_util_ltl_s1 + order[1]
+    cap_util_collab = cap_util_ltl_s1 + (order[1] / truck_cap)
     if numb_ftl_s1 != 0:
         cap_util[0] += [1] * numb_ftl_s1
         for i in range(2):
@@ -88,7 +88,6 @@ def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truc
 
     if order > 0:
         temp_cost[0] += K * mt.ceil(order/truck_cap)
-        temp_cost[0] -= k * 0.5
         temp_cost[1] += k
     return temp_cost, numb_per_OoS_s1
 
@@ -147,6 +146,10 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                 cap_util[i].extend(capacity_utilization(order[i], truck_cap))
 
                         inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
+                    # Warmup
+                    if t <= 50:
+                        for i in range(2):
+                            cost[i] = 0
 
                     # stop simulation of this (s,S) configuration if no improvement w.r.t. current best
                     if cost[0] > best_cost[0] and cost[1] > best_cost[1]:

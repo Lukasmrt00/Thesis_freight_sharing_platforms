@@ -99,8 +99,8 @@ def main():
     h = 1                               # holding cost per unit in inventory, per unit of time
     b_values = [5, 19, 30]              # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [25, 50, 100]            # fixed order cost per truck
-    mu_d_values = [3, 10, 30]       # mean demand (normal distribution)
-    stdev_d_values = [2, 5, 15]     # standard deviation demand (normal distribution)
+    mu_d_values = [10, 20, 30]          # mean demand (normal distribution)
+    stdev_d_values = [2, 5, 15]         # standard deviation demand (normal distribution)
     truck_cap = 33                      # standard closed box trailers can fit 33 europallets
 
     output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
