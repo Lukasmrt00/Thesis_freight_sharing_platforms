@@ -42,7 +42,7 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
     ass_numb_trucks = 0     # associated number of trucks
     ass_avg_cap_util = 0    # associated average capacity utilization
     ass_serv_lev = 0        # associated service level
-    horizon = 10
+    horizon = 1_000
     s_range = [i for i in range(-20, 50)]
     S_max = 50
     best_s = 0
@@ -106,16 +106,15 @@ def main():
     output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
                "Avg. capacity utilization", "Service level", "Repetition"]]
 
-    for rep in range(1, 2):
+    for rep in range(1, 11):
         for b in b_values:
             for K in K_values:
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                        if mu_d - stdev_d >= 0:
                             output.append(simulation(mu_d, stdev_d, h, K, b, truck_cap, rep))
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_5_reps.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_10_reps_new_input.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
