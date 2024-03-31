@@ -132,7 +132,7 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                 if s < inv[1] <= c:
                                     order[1] = min(S-inv[1], excess_cap)
                                     # cost calculation in the collaborative situation
-                                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], copy.deepcopy(cost), order[0],
+                                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0],
                                                                                 h[i], b[i], k, K[i], numb_per_OoS[0], truck_cap)
                                     # adjust inventory levels and report capacity utilization rates
                                     for q in range(2):
@@ -153,6 +153,7 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                                 cap_util[i].extend(capacity_utilization(order[i], truck_cap))
 
                         inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
+
                     # Warmup
                     if t <= 50:
                         for i in range(2):
@@ -173,6 +174,7 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                         ass_numb_trucks[i] = numb_trucks[i]
                         ass_avg_cap_util[i] = round(calculate_avg_capacity(cap_util[i]), 5)
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
+        print('small s: ', s)
 
     for i in range(2):
         print("----- Shipper", i+1, "-----")
@@ -258,7 +260,7 @@ def main():
                         output.append(simulation(s1, S1, mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_adj.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_sep.csv'
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
         writer = csv.writer(file, delimiter=';')
