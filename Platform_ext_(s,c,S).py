@@ -5,6 +5,13 @@ import copy
 
 
 # Section 2: function definition
+def scenario_determination(K, mu_d, stdev_d, scenario):
+    input_par_list = [K[0], mu_d[0], stdev_d[0]]
+    for i in range(len(scenario)):
+        if input_par_list == scenario[i][0]:
+            return scenario[i][1]
+
+
 def capacity_utilization(order_size, truck_cap):
     capac_util = []
     numb_ftl = int(order_size // truck_cap)
@@ -93,12 +100,12 @@ def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truc
 
 
 # Section 3: simulation execution
-def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
-    horizon = 100
+def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
+    horizon = 1_000
     s_range = [i for i in range(-20, 50)]
     S_max = 50
-    best_s = [0, 0]
-    best_S = [0, 0]
+    best_s2 = 0
+    best_S2 = 0
     best_c = 0
     best_cost = [999999999, 999999999]
     ass_numb_trucks = [0, 0]  # associated number of trucks
@@ -114,11 +121,11 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             cap_util = [[], []]
             inv = [mu_d[0], mu_d[1]]
 
-            for c in range(s+1, S):
+            for c in range(s, S):
                 for t in range(horizon):
                     for i in range(2):
                         if i == 0:
-                            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s, S,
+                            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s1, S1,
                                                                                        numb_trucks[i], truck_cap)
                             if order[i] > 0:
                                 # Shipper 2 accepts the transport opportunity: collaborative shipping
@@ -157,10 +164,10 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
 
                 for i in range(2):
                     if cost[i] < best_cost[i]:
-                        best_s[i] = s
-                        best_S[i] = S
-                        # only change c for shipper 2 (cannot be changed for a better cost for S1)
+                        # only change c for shipper 2
                         if i == 1:
+                            best_s2 = s
+                            best_S2 = S
                             best_c = c
                         best_cost[i] = round(cost[i], 5)
                         ass_numb_trucks[i] = numb_trucks[i]
@@ -169,9 +176,12 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
 
     for i in range(2):
         print("----- Shipper", i+1, "-----")
-        print("Best value for s:", best_s[i])
-        print("Best value for S:", best_S[i])
+        if i ==0:
+            print("Best value for s:", s1)
+            print("Best value for S:", S1)
         if i == 1:
+            print("Best value for s:", best_s2)
+            print("Best value for S:", best_S2)
             print("Best value for c:", best_c)
 
         print("Corresponding cost", best_cost[i])
@@ -186,7 +196,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     print("Total number of trucks needed:", total_ass_numb_trucks)
     print("Total average utilization rate", total_avg_cap_util)
 
-    return [h, b, K, k, mu_d, stdev_d, best_s[0], best_S[0], best_s[1], best_S[1], best_c, best_cost[0], best_cost[1],
+    return [h, b, K, k, mu_d, stdev_d, s1, S1, best_s2, best_S2, best_c, best_cost[0], best_cost[1],
             ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0],
             ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
 
@@ -195,7 +205,7 @@ def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
-    k_percent = [0.50, 0.75, 0.90]
+    k_percent = [0, 0.25, 0.50]
     mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
     stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
@@ -205,6 +215,34 @@ def main():
                "# trucks needed S2", "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1",
                "Service level S2", "Total ass # trucks", "Total avg cap util", "Repetition"]]
 
+    input_scenario_S1 = [[[25, 10, 2], [9, 23]],
+                         [[25, 10, 5], [12, 29]],
+                         [[25, 10, 15], [25, 36]],
+                         [[25, 20, 2], [14,23]],
+                         [[25, 20, 5], [23, 28]],
+                         [[25, 20, 15], [32, 46]],
+                         [[25, 30, 2], [18, 33]],
+                         [[25, 30, 5], [29, 38]],
+                         [[25, 30, 15], [39, 50]],
+                         [[50, 10, 2], [9, 31]],
+                         [[50, 10, 5], [12, 31]],
+                         [[50, 10, 15], [21, 40]],
+                         [[50, 20, 2], [15, 23]],
+                         [[50, 20, 5], [22, 29]],
+                         [[50, 20, 15], [32, 47]],
+                         [[50, 30, 2], [20, 33]],
+                         [[50, 30, 5], [28, 38]],
+                         [[50, 30, 15], [42, 50]],
+                         [[100, 10, 2], [10, 32]],
+                         [[100, 10, 5], [11, 32]],
+                         [[100, 10, 15], [22, 40]],
+                         [[100, 20, 2], [15, 23]],
+                         [[100, 20, 5], [19, 34]],
+                         [[100, 20, 15], [29, 49]],
+                         [[100, 30, 2], [25, 33]],
+                         [[100, 30, 5], [29, 39]],
+                         [[100, 30, 15], [34, 49]]]
+
     for rep in range(1, 2):
         print("\n------- New repetition -------")
         for K in K_values:
@@ -213,8 +251,11 @@ def main():
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
                         print("\n------- New input values -------")
+                        print("------- New input values -------")
+                        print("K", K, "k", k, "avg dem.", mu_d, "stdev", stdev_d)
                         print("Repetition number: ", rep)
-                        output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
+                        s1, S1 = scenario_determination(K, mu_d, stdev_d, input_scenario_S1)
+                        output.append(simulation(s1, S1, mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
 
     # File path to write CSV data
     file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_adj.csv'
