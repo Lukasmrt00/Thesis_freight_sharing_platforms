@@ -149,6 +149,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
 
                         inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
 
+
                     # stop simulation of this (s,S) configuration if no improvement w.r.t. current best
                     if cost[0] > best_cost[0] and cost[1] > best_cost[1]:
                         break

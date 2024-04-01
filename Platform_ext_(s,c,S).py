@@ -1,10 +1,10 @@
 import numpy as np
 import math as mt
 import csv
-import copy
+import time
 
 
-# Section 2: function definition
+# Section 1: function definition
 def scenario_determination(K, mu_d, stdev_d, scenario):
     input_par_list = [K[0], mu_d[0], stdev_d[0]]
     for i in range(len(scenario)):
@@ -87,7 +87,7 @@ def cost_calculation(inv, temp_cost, order, h, b, K, numb_per_OoS, truck_cap):
 
 
 def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truck_cap):
-    if inv > 0:
+    if inv >= 0:
         temp_cost[0] += (h * inv)
     else:
         temp_cost[0] -= (b * inv)
@@ -99,7 +99,80 @@ def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truc
     return temp_cost, numb_per_OoS_s1
 
 
-# Section 3: simulation execution
+def out_of_stock(inv, numb_per_Oos):
+    if inv < 0:
+        numb_per_Oos += 1
+    return numb_per_Oos
+
+
+def inventory_mgmt_calc_warmup(s1, S1, mu_d, stdev_d, truck_cap, order, numb_trucks, s, S, c, inv, numb_per_OoS, cap_util):
+    for i in range(2):
+        if i == 0:
+            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s1, S1,
+                                                                       numb_trucks[i], truck_cap)
+            if order[i] > 0:
+                # Shipper 2 accepts the transport opportunity: collaborative shipping
+                if s < inv[1] <= c:
+                    order[1] = min(S - inv[1], excess_cap)
+                    # cost calculation in the collaborative situation
+                    numb_per_OoS[0] = out_of_stock(inv[0], numb_per_OoS[0])
+                    # adjust inventory levels and report capacity utilization rates
+                    for q in range(2):
+                        inv[q] += order[q]
+                        cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
+                # Shipper 2 does not accept the excess capacity
+                else:
+                    numb_per_OoS[0] = out_of_stock(inv[0], numb_per_OoS[0])
+                    inv[0] += order[0]
+                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+        else:
+            order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
+            numb_per_OoS[i] = out_of_stock(inv[i], numb_per_OoS[i])
+            inv[i] += order[i]
+            if order[i] > 0:
+                cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+
+        inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
+
+    return order, inv, numb_trucks, numb_per_OoS, cap_util
+
+
+def inventory_mgmt_calc_non_warmup(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, order, numb_trucks, s, S, c, inv, numb_per_OoS, cap_util, cost):
+    for i in range(2):
+        if i == 0:
+            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s1, S1,
+                                                                       numb_trucks[i], truck_cap)
+            if order[i] > 0:
+                # Shipper 2 accepts the transport opportunity: collaborative shipping
+                if s < inv[1] <= c:
+                    order[1] = min(S - inv[1], excess_cap)
+                    # cost calculation in the collaborative situation
+                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
+                                                                k, K[i], numb_per_OoS[0], truck_cap)
+                    # adjust inventory levels and report capacity utilization rates
+                    for q in range(2):
+                        inv[q] += order[q]
+                        cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
+                # Shipper 2 does not accept the excess capacity
+                else:
+                    cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
+                                                                K[i], numb_per_OoS[i], truck_cap)
+                    inv[0] += order[0]
+                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+        else:
+            order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
+            cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
+                                                        K[i], numb_per_OoS[i], truck_cap)
+            inv[i] += order[i]
+            if order[i] > 0:
+                cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+
+        inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
+
+    return order, inv, numb_trucks, numb_per_OoS, cap_util, cost
+
+
+# Section 2: simulation function
 def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     horizon = 1_000
     s_range = [i for i in range(-20, 50)]
@@ -113,51 +186,23 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     ass_serv_lev = [0, 0]  # associated service level
 
     for s in s_range:
-        for S in range(s, S_max + 1):
-            cost = [0, 0]
-            order = [0, 0]
-            numb_trucks = [0, 0]
-            numb_per_OoS = [0, 0]  # number of periods out of stock
-            cap_util = [[], []]
-            inv = [mu_d[0], mu_d[1]]
-
+        for S in range(max(0, s), S_max + 1):
             for c in range(s, S):
-                for t in range(horizon):
-                    for i in range(2):
-                        if i == 0:
-                            order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s1, S1,
-                                                                                       numb_trucks[i], truck_cap)
-                            if order[i] > 0:
-                                # Shipper 2 accepts the transport opportunity: collaborative shipping
-                                if s < inv[1] <= c:
-                                    order[1] = min(S-inv[1], excess_cap)
-                                    # cost calculation in the collaborative situation
-                                    cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0],
-                                                                                h[i], b[i], k, K[i], numb_per_OoS[0], truck_cap)
-                                    # adjust inventory levels and report capacity utilization rates
-                                    for q in range(2):
-                                        inv[i] += order[i]
-                                        cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
-                                # Shipper 2 does not accept the excess capacity
-                                else:
-                                    cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
-                                                                                K[i], numb_per_OoS[i], truck_cap)
-                                    inv[0] += order[0]
-                                    cap_util[i].extend(capacity_utilization(order[i], truck_cap))
-                        else:
-                            order[i], numb_trucks[i] = order_calculation(inv[i], s, S, numb_trucks[i], truck_cap)
-                            cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
-                                                                        K[i], numb_per_OoS[i], truck_cap)
-                            inv[i] += order[i]
-                            if order[i] > 0:
-                                cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+                cost = [0, 0]
+                order = [0, 0]
+                numb_trucks = [0, 0]
+                numb_per_OoS = [0, 0]  # number of periods out of stock
+                cap_util = [[], []]
+                inv = [mu_d[0], mu_d[1]]
+                for t in range(51):
+                    order, inv, numb_trucks, numb_per_OoS, cap_util = inventory_mgmt_calc_warmup(s1, S1, mu_d, stdev_d, truck_cap, order, numb_trucks, s, S, c, inv, numb_per_OoS, cap_util)
 
-                        inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
-
-                    # Warmup
-                    if t <= 50:
-                        for i in range(2):
-                            cost[i] = 0
+                for t in range(51, horizon):
+                    order, inv, numb_trucks, numb_per_OoS, cap_util, cost = inventory_mgmt_calc_non_warmup(s1, S1, mu_d, stdev_d,
+                                                                                                h, k, K, b, truck_cap,
+                                                                                                order, numb_trucks, s, S,
+                                                                                                c, inv, numb_per_OoS,
+                                                                                                cap_util, cost)
 
                     # stop simulation of this (s,S) configuration if no improvement w.r.t. current best
                     if cost[0] > best_cost[0] and cost[1] > best_cost[1]:
@@ -174,7 +219,6 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                         ass_numb_trucks[i] = numb_trucks[i]
                         ass_avg_cap_util[i] = round(calculate_avg_capacity(cap_util[i]), 5)
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
-        print('small s: ', s)
 
     for i in range(2):
         print("----- Shipper", i+1, "-----")
@@ -203,6 +247,8 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
 
 
+
+# Section 3: simulation execution
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
@@ -253,11 +299,13 @@ def main():
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
                         print("\n------- New input values -------")
-                        print("------- New input values -------")
                         print("K", K, "k", k, "avg dem.", mu_d, "stdev", stdev_d)
                         print("Repetition number: ", rep)
                         s1, S1 = scenario_determination(K, mu_d, stdev_d, input_scenario_S1)
+                        start_time = time.time()
                         output.append(simulation(s1, S1, mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
+                        end_time = time.time()
+                        print("\n Running time one execution =", (end_time-start_time))
 
     # File path to write CSV data
     file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_sep.csv'
