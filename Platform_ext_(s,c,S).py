@@ -99,7 +99,7 @@ def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truc
     return temp_cost, numb_per_OoS_s1
 
 
-def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, numb_trucks, truck_cap, numb_per_OoS, cap_util, cost):
+def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, numb_trucks, truck_cap, numb_per_OoS, cap_util, cost, cost_after):
     for i in range(2):
         if i == 0:
             order[i], numb_trucks[i], excess_cap = order_calc_shipper1(inv[i], s1, S1,
@@ -115,12 +115,18 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
                     for q in range(2):
                         inv[q] += order[q]
                         cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
+
+                    cost_after, _ = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
+                                                                k, K[i], numb_per_OoS[0], truck_cap)
                 # Shipper 2 does not accept the excess capacity
                 else:
                     cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
                                                                 K[i], numb_per_OoS[i], truck_cap)
                     inv[0] += order[0]
                     cap_util[i].extend(capacity_utilization(order[i], truck_cap))
+
+                    cost_after[i], _ = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
+                                                                K[i], numb_per_OoS[i], truck_cap)
             else:
                 cost[i], numb_per_OoS[i] = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
                                                             K[i], numb_per_OoS[i], truck_cap)
@@ -133,9 +139,12 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
             if order[i] > 0:
                 cap_util[i].extend(capacity_utilization(order[i], truck_cap))
 
+            cost_after[i], _ = cost_calculation(inv[i], cost[i], order[i], h[i], b[i],
+                                                                K[i], numb_per_OoS[i], truck_cap)
+
         inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
 
-    return order, inv, numb_trucks, numb_per_OoS, cap_util, cost
+    return order, inv, numb_trucks, numb_per_OoS, cap_util, cost, cost_after
 
 
 # Section 3: simulation execution
@@ -175,6 +184,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     best_S2 = 0
     best_c = 0
     best_cost = [999999999, 999999999]
+    best_cost_after = [999999999, 999999999]
     ass_numb_trucks = [0, 0]  # associated number of trucks
     ass_avg_cap_util = [0, 0]  # associated average capacity utilization
     ass_serv_lev = [0, 0]  # associated service level
@@ -183,22 +193,24 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
         for S in range(s, S_max + 1):
             for c in range(s+1, S):
                 cost = [0, 0]
+                cost_after = [0, 0]
                 order = [0, 0]
                 numb_trucks = [0, 0]
                 numb_per_OoS = [0, 0]  # number of periods out of stock
                 cap_util = [[], []]
                 inv = [mu_d[0], mu_d[1]]
                 for t in range(51):
-                    order, inv, numb_trucks, numb_per_OoS, cap_util, cost = (
+                    order, inv, numb_trucks, numb_per_OoS, cap_util, cost, cost_after = (
                         sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order,
-                                         numb_trucks, truck_cap, numb_per_OoS, cap_util, cost))
+                                         numb_trucks, truck_cap, numb_per_OoS, cap_util, cost, cost_after))
 
                     cost = [0, 0]
+                    cost_after = [0, 0]
 
                 for t in range(51, horizon):
-                    order, inv, numb_trucks, numb_per_OoS, cap_util, cost = (
+                    order, inv, numb_trucks, numb_per_OoS, cap_util, cost, cost_after = (
                         sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order,
-                                         numb_trucks, truck_cap, numb_per_OoS, cap_util, cost))
+                                         numb_trucks, truck_cap, numb_per_OoS, cap_util, cost, cost_after))
 
                     # stop simulation of this (s,S) configuration if no improvement w.r.t. current best
                     if cost[0] > best_cost[0] and cost[1] > best_cost[1]:
@@ -212,6 +224,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                             best_S2 = S
                             best_c = c
                         best_cost[i] = round(cost[i], 5)
+                        best_cost_after[i] = round(cost_after[i], 5)
                         ass_numb_trucks[i] = numb_trucks[i]
                         ass_avg_cap_util[i] = round(calculate_avg_capacity(cap_util[i]), 5)
                         ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
@@ -226,7 +239,8 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             print("Best value for S:", best_S2)
             print("Best value for c:", best_c)
 
-        print("Corresponding cost", best_cost[i])
+        print("Corresponding cost BEFORE order added to inv", best_cost[i])
+        print("Corresponding cost AFTER order added to inv", best_cost_after)
         print("Associated number of trucks needed:", ass_numb_trucks[i])
         print("Associated average utilization rate:", ass_avg_cap_util[i])
         print("Associated service level", ass_serv_lev[i])
