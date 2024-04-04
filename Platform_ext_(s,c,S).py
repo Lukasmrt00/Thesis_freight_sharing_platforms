@@ -240,7 +240,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
             print("Best value for c:", best_c)
 
         print("Corresponding cost BEFORE order added to inv", best_cost[i])
-        print("Corresponding cost AFTER order added to inv", best_cost_after)
+        print("Corresponding cost AFTER order added to inv", best_cost_after[i])
         print("Associated number of trucks needed:", ass_numb_trucks[i])
         print("Associated average utilization rate:", ass_avg_cap_util[i])
         print("Associated service level", ass_serv_lev[i])
@@ -252,24 +252,25 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     print("Total number of trucks needed:", total_ass_numb_trucks)
     print("Total average utilization rate", total_avg_cap_util)
 
-    return [h, b, K, k, mu_d, stdev_d, s1, S1, best_s2, best_S2, best_c, best_cost[0], best_cost[1],
-            ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0],
-            ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
+    return [h, b, K, k, mu_d, stdev_d, s1, S1, best_s2, best_S2, best_c, best_cost[0], best_cost[1], best_cost_after[0],
+            best_cost_after[1], ass_numb_trucks[0], ass_numb_trucks[1], ass_avg_cap_util[0], ass_avg_cap_util[1],
+            ass_serv_lev[0], ass_serv_lev[1], total_ass_numb_trucks, total_avg_cap_util, rep]
 
 
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
     b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
-    K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
+    K_values = [[25, 100], [100, 25]]  # fixed order cost per truck
     k_percent = [0.25, 0.50, 0.75]
-    mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
-    stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
+    mu_d_values = [[10, 30], [30, 10]]  # mean demand (normal distribution)
+    stdev_d_values = [[5, 15], [15, 5]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 europallets
     counter = 0
 
     output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "S-value S1", "s-value S2", "S-value S2",
-               "Corresponding c value", "Corresponding cost S1", "Corresponding cost S2", "# trucks needed S1",
-               "# trucks needed S2", "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1",
+               "Corresponding c value", "Corresponding cost S1", "Corresponding cost S2", "Corresponding cost AFTER S1",
+               "Corresponding AFTER cost S2", "# trucks needed S1", "# trucks needed S2",
+               "Avg. capacity utilization S1", "Avg. capacity utilization S2", "Service level S1",
                "Service level S2", "Total ass # trucks", "Total avg cap util", "Repetition"]]
 
     for rep in range(1, 2):
@@ -290,7 +291,7 @@ def main():
                         print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_adj.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_DIFF_POL_DIFF_PARAM_costaroundinv.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
