@@ -1,3 +1,4 @@
+# Meest recente versie om te runnen: foutje bij inventory aanpassen aan demand voor shipper 1 in de collaborative situatie
 import time
 import numpy as np
 import math as mt
@@ -99,7 +100,8 @@ def cost_calc_collab_s1(inv, temp_cost, order, h, b, k, K, numb_per_OoS_s1, truc
     return temp_cost, numb_per_OoS_s1
 
 
-def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, numb_trucks_s1, numb_trucks_s2_ind, numb_trucks_s2_col, truck_cap, numb_per_OoS, cap_util, cost):
+def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, numb_trucks_s1, numb_trucks_s2_ind,
+                     numb_trucks_s2_col, truck_cap, numb_per_OoS, cap_util, cost):
     for i in range(2):
         if i == 0:
             order[i], numb_trucks_s1, excess_cap = order_calc_shipper1(inv[i], s1, S1,
