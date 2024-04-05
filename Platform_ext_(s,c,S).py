@@ -116,6 +116,8 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
                         inv[q] += order[q]
                         cap_util[q].extend(capacity_utilization_collab(order, truck_cap)[q])
 
+                    # subtract demand of period t from inventory
+                    inv[i] -= max(0, np.random.normal(mu_d[i], stdev_d[i]))
                     # cost calculation in the collaborative situation
                     cost, numb_per_OoS[0] = cost_calc_collab_s1(inv[0], cost, order[0], h[i], b[i],
                                                                 k, K[i], numb_per_OoS[0], truck_cap)
