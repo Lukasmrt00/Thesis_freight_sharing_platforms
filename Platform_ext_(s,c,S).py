@@ -155,7 +155,7 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
 
 
 # Section 3: simulation execution
-def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
+def simulation(mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
     input_scenario_S1 = [[[25, 10, 2], [9, 23]],
                          [[25, 10, 5], [12, 29]],
                          [[25, 10, 15], [25, 36]],
@@ -228,7 +228,7 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
                 for i in range(2):
                     if cost[i] < best_cost[i]:
                         # only change c for shipper 2 (cannot be changed for a better cost for S1)
-                        if i ==0:
+                        if i == 0:
                             ass_numb_trucks_s1 = numb_trucks_s1
                         if i == 1:
                             best_s2 = s
@@ -266,9 +266,10 @@ def simulation(mu_d, stdev_d, h, k, K, b, truck_cap, rep):
     print("Total number of trucks needed:", total_ass_numb_trucks)
     print("Total average utilization rate", total_avg_cap_util)
 
-    return [h, b, K, k, mu_d, stdev_d, s1, S1, best_s2, best_S2, best_c, best_cost[0], best_cost[1], ass_numb_trucks_s1,
-            ass_numb_trucks_s2_ind, ass_numb_trucks_s2_col, ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0], ass_serv_lev[1],
-            total_ass_numb_trucks, total_avg_cap_util, rep]
+    return [h, b[0], b[1], K[0], K[1], mu_d[0], mu_d[1], stdev_d[0], stdev_d[1], k, p, s1, S1, best_s2, best_S2, best_c,
+            best_cost[0], best_cost[1], ass_numb_trucks_s1, ass_numb_trucks_s2_ind, ass_numb_trucks_s2_col,
+            ass_avg_cap_util[0], ass_avg_cap_util[1], ass_serv_lev[0], ass_serv_lev[1], total_ass_numb_trucks,
+            total_avg_cap_util, rep]
 
 
 def main():
@@ -281,9 +282,9 @@ def main():
     truck_cap = 33  # standard closed box trailers can fit 33 Euro-pallets
     counter = 0
 
-    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s1 (small)", "S1 (big)", "s2 (small)", "S2 (big)",
-               "Corresponding c value", "Corresponding cost S1", "Cost S2", "# trucks S1",
-               "# trucks S2 (ind)", "# trucks S2 (coll.)", "Avg. load factor S1",
+    output = [["h", "b (S1)", "b (S2)", "K (S1)", "K (S2)",  "mu_d (S1)", "mu_d (S2)", "stdev_d (S1)", "stdev_d (S2)",
+               "k (abs.)", "k (rel.)", "s1 (small)", "S1 (big)", "s2 (small)", "S2 (big)", "c", "Cost S1", "Cost S2",
+               "# trucks S1", "# trucks S2 (ind)", "# trucks S2 (coll.)", "Avg. load factor S1",
                "Avg. load factor S2", "Service level S1", "Service level S2", "Total # trucks",
                "Total avg load factor", "Repetition"]]
 
@@ -298,14 +299,14 @@ def main():
                         print("Repetition number: ", rep)
                         print("K: ", K, " - k: ", k, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
                         start_time = time.time()
-                        output.append(simulation(mu_d, stdev_d, h, k, K, b_values, truck_cap, rep))
+                        output.append(simulation(mu_d, stdev_d, h, k, p, K, b_values, truck_cap, rep))
                         end_time = time.time()
                         print("\nTime taken: ", end_time - start_time)
                         counter += 1
                         print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_DIFF_POL_DIFF_PARAM_costaroundinv.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\(s,c,S)_1_reps_PARAM_.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
