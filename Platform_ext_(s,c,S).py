@@ -259,8 +259,8 @@ def simulation(mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
         print("Associated average utilization rate:", ass_avg_cap_util[i])
         print("Associated service level", ass_serv_lev[i])
 
-    total_ass_numb_trucks = ass_numb_trucks_s1 + (ass_numb_trucks_s2_ind + ass_numb_trucks_s2_col)
-    total_avg_cap_util = round(0.5*(ass_avg_cap_util[0]+ass_avg_cap_util[1]), 5)
+    total_ass_numb_trucks = ass_numb_trucks_s1 + ass_numb_trucks_s2_ind
+    total_avg_cap_util = round(0.5*(ass_avg_cap_util[0] + ass_avg_cap_util[1]), 5)
 
     print("----- Total -----")
     print("Total number of trucks needed:", total_ass_numb_trucks)
