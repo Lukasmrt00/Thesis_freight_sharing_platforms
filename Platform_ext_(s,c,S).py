@@ -281,11 +281,11 @@ def main():
     truck_cap = 33  # standard closed box trailers can fit 33 Euro-pallets
     counter = 0
 
-    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s-value S1", "S-value S1", "s-value S2", "S-value S2",
-               "Corresponding c value", "Corresponding cost S1", "Corresponding cost S2", "# trucks needed S1",
-               "# trucks needed S2 (ind)", "# trucks needed S2 (coll.)", "Avg. capacity utilization S1",
-               "Avg. capacity utilization S2", "Service level S1", "Service level S2", "Total ass # trucks",
-               "Total avg cap util", "Repetition"]]
+    output = [["h", "b", "K", "k", "mu_d", "stdev_d", "s1 (small)", "S1 (big)", "s2 (small)", "S2 (big)",
+               "Corresponding c value", "Corresponding cost S1", "Cost S2", "# trucks S1",
+               "# trucks S2 (ind)", "# trucks S2 (coll.)", "Avg. load factor S1",
+               "Avg. load factor S2", "Service level S1", "Service level S2", "Total # trucks",
+               "Total avg load factor", "Repetition"]]
 
     for rep in range(1, 2):
         print("\n------- New repetition -------")
