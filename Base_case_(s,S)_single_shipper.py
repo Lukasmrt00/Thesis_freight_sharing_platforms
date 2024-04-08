@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 import math as mt
 import csv
@@ -72,16 +74,19 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
                 # calculate costs
                 cost, numb_per_OoS = cost_calculation(inv, cost, order, h, b, K, numb_per_OoS, truck_cap)
 
+                if t <= 50:
+                    cost = 0
+
                 if cost > best_cost:
                     break
 
             if cost < best_cost:
                 best_s = s
                 best_S = S
-                best_cost = round(cost, 5)
+                best_cost = round(cost, 2)
                 ass_numb_trucks = numb_trucks
                 ass_avg_cap_util = round(float(np.mean(cap_util)), 5)
-                ass_serv_lev = 1-(numb_per_OoS/horizon)
+                ass_serv_lev = round(1-(numb_per_OoS/horizon),4)
 
     print("----- Output -----")
     print("Best value for s:", best_s)
@@ -97,24 +102,33 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
 # Section 2: Execution
 def main():
     h = 1                               # holding cost per unit in inventory, per unit of time
-    b_values = [5, 19, 30]              # backlog cost per unit backlog (negative inventory), per unit of time
+    b_values = [5, 10, 19]              # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [25, 50, 100]            # fixed order cost per truck
     mu_d_values = [10, 20, 30]          # mean demand (normal distribution)
     stdev_d_values = [2, 5, 15]         # standard deviation demand (normal distribution)
     truck_cap = 33                      # standard closed box trailers can fit 33 europallets
-
+    counter = 0
     output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
                "Avg. capacity utilization", "Service level", "Repetition"]]
 
     for rep in range(1, 11):
+        print("\n------- New repetition -------")
         for b in b_values:
             for K in K_values:
                 for mu_d in mu_d_values:
                     for stdev_d in stdev_d_values:
-                            output.append(simulation(mu_d, stdev_d, h, K, b, truck_cap, rep))
+                        print("\n------- New input values -------")
+                        print("Repetition number: ", rep)
+                        print("b: ", b, " - K: ", K, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
+                        start_time = time.time()
+                        output.append(simulation(mu_d, stdev_d, h, K, b, truck_cap, rep))
+                        end_time = time.time()
+                        print("\nTime taken: ", end_time - start_time)
+                        counter += 1
+                        print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_10_reps_new_input.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_10_reps_new_b_values.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
