@@ -1,8 +1,8 @@
-# Meest recente versie om te runnen: foutje bij inventory aanpassen aan demand voor shipper 1 in de collaborative situatie
 import time
 import numpy as np
 import math as mt
 import csv
+import datetime
 
 
 # Section 2: function definition
@@ -210,7 +210,7 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
                             ass_numb_trucks_s2_col = numb_trucks_s2_col
                         best_cost[i] = round(cost[i], 2)
                         ass_avg_cap_util[i] = round(calculate_avg_capacity(cap_util[i]), 5)
-                        ass_serv_lev[i] = 1-(numb_per_OoS[i]/horizon)
+                        ass_serv_lev[i] = round((1-(numb_per_OoS[i]/horizon)),4)
 
     for i in range(2):
         print("----- Shipper", i+1, "-----")
@@ -246,7 +246,7 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
 
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
-    b_values = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
+    b = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
     K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
     k_percent = [0.25, 0.50, 0.75]
     mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
@@ -351,10 +351,10 @@ def main():
                     for stdev_d in stdev_d_values:
                         print("\n------- New input values -------")
                         print("Repetition number: ", rep)
-                        print("K: ", K, " - k: ", k, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
+                        print("b: ", b, " - K: ", K, " - k: ", k, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
                         start_time = time.time()
-                        s1, S1 = scenario_determination(b_values, K, mu_d, stdev_d, input_scenario_s1)
-                        output.append(simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b_values, truck_cap, rep))
+                        s1, S1 = scenario_determination(b, K, mu_d, stdev_d, input_scenario_s1)
+                        output.append(simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep))
                         end_time = time.time()
                         print("\nTime taken: ", end_time - start_time)
                         counter += 1
