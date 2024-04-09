@@ -342,7 +342,7 @@ def main():
                          [[19, 100, 30, 5], [27, 38]],
                          [[19, 100, 30, 15], [36, 50]]]
 
-    for rep in range(3, 4):
+    for rep in range(4, 5):
         print("\n------- New repetition -------")
         for b in b_values:
             for K in K_values:
@@ -362,7 +362,7 @@ def main():
                             print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\(s,c,S)_rep_3_DIFF_PARAM_b10_b19.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\(s,c,S)_rep_4_DIFF_PARAM_b10_b19.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
