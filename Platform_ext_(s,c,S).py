@@ -157,7 +157,7 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
 # Section 3: simulation execution
 def simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
     horizon = 1_000
-    s_range = [i for i in range(-5, 50)]
+    s_range = [i for i in range(0, 50)]
     S_max = 50
     best_s2 = 0
     best_S2 = 0
