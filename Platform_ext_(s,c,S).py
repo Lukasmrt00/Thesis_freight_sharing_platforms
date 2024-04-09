@@ -157,7 +157,7 @@ def sim_calculations(s1, S1, inv, h, b, k, K, mu_d, stdev_d, s, S, c, order, num
 # Section 3: simulation execution
 def simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
     horizon = 1_000
-    s_range = [i for i in range(-5, 50)]
+    s_range = [i for i in range(-7, 50)]
     S_max = 50
     best_s2 = 0
     best_S2 = 0
@@ -246,11 +246,11 @@ def simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep):
 
 def main():
     h = [1, 1]  # holding cost per unit in inventory, per unit of time
-    b = [19, 19]  # backlog cost per unit backlog (negative inventory), per unit of time
-    K_values = [[25, 25], [50, 50], [100, 100]]  # fixed order cost per truck
+    b_values = [[10, 10], [19, 19]]  # backlog cost per unit backlog (negative inventory), per unit of time
+    K_values = [[25, 50], [50, 25]]  # fixed order cost per truck
     k_percent = [0.25, 0.50, 0.75]
-    mu_d_values = [[10, 10], [20, 20], [30, 30]]  # mean demand (normal distribution)
-    stdev_d_values = [[2, 2], [5, 5], [15, 15]]  # standard deviation demand (normal distribution)
+    mu_d_values = [[10, 30], [30, 10]]  # mean demand (normal distribution)
+    stdev_d_values = [[5, 5], [15, 15]]  # standard deviation demand (normal distribution)
     truck_cap = 33  # standard closed box trailers can fit 33 Euro-pallets
     counter = 0
 
@@ -342,26 +342,27 @@ def main():
                          [[19, 100, 30, 5], [27, 38]],
                          [[19, 100, 30, 15], [36, 50]]]
 
-    for rep in range(1, 2):
+    for rep in range(3, 4):
         print("\n------- New repetition -------")
-        for K in K_values:
-            for p in k_percent:
-                k = p * K[0]
-                for mu_d in mu_d_values:
-                    for stdev_d in stdev_d_values:
-                        print("\n------- New input values -------")
-                        print("Repetition number: ", rep)
-                        print("b: ", b, " - K: ", K, " - k: ", k, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
-                        start_time = time.time()
-                        s1, S1 = scenario_determination(b, K, mu_d, stdev_d, input_scenario_s1)
-                        output.append(simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep))
-                        end_time = time.time()
-                        print("\nTime taken: ", end_time - start_time)
-                        counter += 1
-                        print("Counter: ", counter)
+        for b in b_values:
+            for K in K_values:
+                for p in k_percent:
+                    k = p * K[0]
+                    for mu_d in mu_d_values:
+                        for stdev_d in stdev_d_values:
+                            print("\n------- New input values -------")
+                            print("Repetition number: ", rep)
+                            print("b: ", b, " - K: ", K, " - k: ", k, " - mu_d: ", mu_d, "stdev_d: ", stdev_d)
+                            start_time = time.time()
+                            s1, S1 = scenario_determination(b, K, mu_d, stdev_d, input_scenario_s1)
+                            output.append(simulation(s1, S1, mu_d, stdev_d, h, k, p, K, b, truck_cap, rep))
+                            end_time = time.time()
+                            print("\nTime taken: ", end_time - start_time)
+                            counter += 1
+                            print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_DIFF_POL_DIFF_PARAM_costaroundinv.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\(s,c,S)_rep_3_DIFF_PARAM_b10_b19.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
