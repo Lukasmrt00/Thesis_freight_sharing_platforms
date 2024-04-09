@@ -2,7 +2,6 @@ import time
 import numpy as np
 import math as mt
 import csv
-import datetime
 
 
 # Section 2: function definition
@@ -342,7 +341,7 @@ def main():
                          [[19, 100, 30, 5], [27, 38]],
                          [[19, 100, 30, 15], [36, 50]]]
 
-    for rep in range(1, 2):
+    for rep in range(10, 11):
         print("\n------- New repetition -------")
         for K in K_values:
             for p in k_percent:
@@ -361,7 +360,7 @@ def main():
                         print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\extension_(s,c,S)_1_reps_DIFF_POL_DIFF_PARAM_costaroundinv.csv'
+    file_path = r'C:\Lukas_outputs\(s,c,S)_rep_10_SAME_PARAM_new_scen_b19.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
