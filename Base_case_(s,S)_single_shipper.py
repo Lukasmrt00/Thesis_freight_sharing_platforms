@@ -102,10 +102,10 @@ def simulation(mu_d, stdev_d, h, K, b, truck_cap, rep):
 # Section 2: Execution
 def main():
     h = 1                               # holding cost per unit in inventory, per unit of time
-    b_values = [5, 10, 19]              # backlog cost per unit backlog (negative inventory), per unit of time
-    K_values = [25, 50, 100]            # fixed order cost per truck
-    mu_d_values = [10, 20, 30]          # mean demand (normal distribution)
-    stdev_d_values = [2, 5, 15]         # standard deviation demand (normal distribution)
+    b_values = [19]                     # backlog cost per unit backlog (negative inventory), per unit of time
+    K_values = [25, 75]                 # fixed order cost per truck
+    mu_d_values = [10, 30]              # mean demand (normal distribution)
+    stdev_d_values = [2, 10]            # standard deviation demand (normal distribution)
     truck_cap = 33                      # standard closed box trailers can fit 33 europallets
     counter = 0
     output = [["h", "b", "K", "mu_d", "stdev_d", "s-value", "S-value", "Corresponding cost", "# trucks needed",
@@ -128,7 +128,7 @@ def main():
                         print("Counter: ", counter)
 
     # File path to write CSV data
-    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_10_reps_new_b_values.csv'
+    file_path = r'C:\Users\lukas\PycharmProjects\Thesis_freight_sharing_platforms\Output files\Base_case_10_reps_highlowinputs.csv'
 
     # Writing data to CSV file
     with open(file_path, mode='w', newline='') as file:
